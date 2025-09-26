@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 mongoose.connect(
   process.env.MONGO_URI || 'mongodb+srv://Zerodha:Shayam@zerodha.tjlbwfw.mongodb.net/zerodha?retryWrites=true&w=majority&appName=Zerodha',
@@ -21,6 +22,18 @@ const AdminSchema = new mongoose.Schema({
 const UserSchema = new mongoose.Schema({
   username: String,
   password: String,
+});
+
+UserSchema.pre('save', async function(next) {
+  if(!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+
+  } catch (error) {
+    next(error);
+  }
 });
 
 const BookapointSchema = new mongoose.Schema({

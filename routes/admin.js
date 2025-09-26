@@ -1,5 +1,5 @@
 const express = require("express");
-const adminMiddleware = require("../middleware/admin");
+const adminMiddleware = require("../Middleware/admin");
 const jwt = require("jsonwebtoken");
 const { Admin, Bookapoint, PDFDocument, DiseaseTemplate, MedicalRecord } = require("../db/db");
 const router = express.Router();

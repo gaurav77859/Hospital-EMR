@@ -1,9 +1,18 @@
 //eheufheiuofwoenferwonvrwonhveriohnerwion
 
-const pdf = require('pdf-parse');
-const natural = require('natural');
-const compromise = require('compromise');
+const pdf = require('pdf-parse');   // pdf upload
+const natural = require('natural'); // text extraction
+const compromise = require('compromise'); // 
 const { DiseaseTemplate, MedicalRecord, PDFDocument } = require('../db/db');
+
+async function previewText(pdfBuffer) {
+  try {
+    return await pdfParse(pdfBuffer);
+  } catch (error) {
+    console.error("Error previewing PDF:", error);
+    return null;
+  }
+}
 
 class PDFProcessor {
   constructor() {
@@ -229,3 +238,4 @@ class PDFProcessor {
 }
 
 module.exports = new PDFProcessor();
+module.exports.previewText = previewText;

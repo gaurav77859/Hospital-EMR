@@ -1,11 +1,11 @@
 const express = require("express");
-const userMiddleware = require("../middleware/user");
+const userMiddleware = require("../Middleware/user");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs-extra");
 const { User, Bookapoint, PDFDocument, MedicalRecord, DiseaseTemplate } = require("../db/db");
-const pdfProcessor = require("../service/pdfProcessor");
+const pdfProcessor = require("../Service/pdfProcessor");
 const router = express.Router();
 
 // Ensure uploads directory exists
@@ -62,11 +62,11 @@ router.post('/signup', async (req, res) => {
 router.post("/signin", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await User.findOne({ username, password });
-    if (user) {
+    const user = await User.findOne({ username });
+    if (user && await bcrypt.compare(password, user.password)) {
       const token = jwt.sign(
         { username, userId: user._id }, 
-        process.env.JWT_SECRET || "sonu_server"
+        process.env.JWT_SECRET
       );
       res.json({ 
         token, 
@@ -92,6 +92,17 @@ router.post("/api/upload-pdf", userMiddleware, upload.single('pdfFile'), async (
       });
     }
 
+    // Read file buffer right away to check if it has text
+    const pdfBuffer = await fs.readFile(req.file.path);
+    const data = await pdfProcessor.previewText(pdfBuffer); // helper function explained below
+
+    if (!data || !data.text || data.text.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Uploaded PDF contains no text (likely scanned image)"
+      });
+    }
+
     // Create PDF document record
     const pdfDocument = await PDFDocument.create({
       filename: req.file.filename,
@@ -107,7 +118,6 @@ router.post("/api/upload-pdf", userMiddleware, upload.single('pdfFile'), async (
     // Process PDF asynchronously
     setImmediate(async () => {
       try {
-        const pdfBuffer = await fs.readFile(req.file.path);
         await pdfProcessor.processPDF(pdfDocument._id, pdfBuffer, req.userId);
       } catch (error) {
         console.error('PDF processing error:', error);
@@ -133,6 +143,7 @@ router.post("/api/upload-pdf", userMiddleware, upload.single('pdfFile'), async (
     });
   }
 });
+
 
 // GET MEDICAL RECORDS (FILLED TEMPLATES)
 router.get("/api/medical-records", userMiddleware, async (req, res) => {

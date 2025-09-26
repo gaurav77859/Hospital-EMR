@@ -8,7 +8,7 @@ function userMiddleware(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET || "sonu_server");
+    const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
     req.username = decoded.username;
     req.userId = decoded.userId;
     next();

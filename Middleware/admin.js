@@ -8,7 +8,7 @@ function adminMiddleware(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET || "sonu_server");
+    const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
     if (decoded.role !== 'admin') {
       return res.status(403).json({ message: "Admin access required" });
     }
